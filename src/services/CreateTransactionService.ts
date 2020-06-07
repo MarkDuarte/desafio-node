@@ -1,10 +1,11 @@
 import { getCustomRepository, getRepository } from 'typeorm';
 import AppError from '../errors/AppError';
 
-import TransactionsRepository from '../repositories/TransactionsRepository';
-
 import Transaction from '../models/Transaction';
+
 import Category from '../models/Category';
+
+import TransactionsRepository from '../repositories/TransactionsRepository';
 
 interface Request {
   title: string;
@@ -16,17 +17,17 @@ interface Request {
 class CreateTransactionService {
   public async execute({
     title,
-    value,
     type,
+    value,
     category,
   }: Request): Promise<Transaction> {
-    const transactionRepository = getCustomRepository(TransactionsRepository);
+    const transactionRespository = getCustomRepository(TransactionsRepository);
     const categoryRepository = getRepository(Category);
 
-    const { total } = await transactionRepository.getBalance();
+    const { total } = await transactionRespository.getBalance();
 
     if (type === 'outcome' && total < value) {
-      throw new AppError('You do not have enough balance');
+      throw new AppError('value is not permitted');
     }
 
     let transactionCategory = await categoryRepository.findOne({
@@ -43,14 +44,14 @@ class CreateTransactionService {
       await categoryRepository.save(transactionCategory);
     }
 
-    const transaction = transactionRepository.create({
+    const transaction = transactionRespository.create({
       title,
-      value,
       type,
+      value,
       category: transactionCategory,
     });
 
-    await transactionRepository.save(transaction);
+    await transactionRespository.save(transaction);
 
     return transaction;
   }
